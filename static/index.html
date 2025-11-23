@@ -355,7 +355,9 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:5000';
+        // For Netlify deployment, we'll use relative paths
+        // In a production environment, you would need to configure API endpoints properly
+        const API_URL = '';
 
         // Load dashboard stats
         async function loadStats() {
@@ -456,57 +458,73 @@
                     body: JSON.stringify({
                         amount: parseFloat(document.getElementById('amount').value),
                         vendor: document.getElementById('vendor').value,
+                        hasPO: document.getElementById('hasPO').value
+                    })
+                });
 
-                        // Invoice submission form
-                        document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
-                            e.preventDefault();
-                            const resultDiv = document.getElementById('invoiceResult');
-                            resultDiv.style.display = 'block';
-                            resultDiv.className = 'result';
-                            resultDiv.innerHTML = '<div class="loading"></div> Submitting...';
+                const data = await response.json();
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    <h3>✅ Risk Score Calculated!</h3>
+                    <p><strong>Score:</strong> ${data.score}</p>
+                    <p><strong>Level:</strong> <span class="risk-badge risk-${data.level}">${data.level}</span></p>
+                `;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+            }
+        });
 
-                            try {
-                                const response = await fetch(`${API_URL}/demo/invoices/parse`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        vendor: document.getElementById('invoiceVendor').value,
-                                        amount: parseFloat(document.getElementById('invoiceAmount').value),
-                                        po_number: document.getElementById('poNumber').value,
-                                        invoice_text: document.getElementById('invoiceText').value
-                                    })
-                                });
+        // Invoice submission form
+        document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const resultDiv = document.getElementById('invoiceResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '<div class="loading"></div> Submitting...';
 
-                                const data = await response.json();
-                                resultDiv.className = 'result success';
-                                resultDiv.innerHTML = `
+            try {
+                const response = await fetch(`${API_URL}/demo/invoices/parse`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        vendor: document.getElementById('invoiceVendor').value,
+                        amount: parseFloat(document.getElementById('invoiceAmount').value),
+                        po_number: document.getElementById('poNumber').value,
+                        invoice_text: document.getElementById('invoiceText').value
+                    })
+                });
+
+                const data = await response.json();
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
                     <h3>✅ Invoice Submitted Successfully!</h3>
                     <p><strong>Invoice ID:</strong> ${data.invoice_id}</p>
                     <p><strong>Vendor:</strong> ${data.vendor}</p>
                     <p><strong>Amount:</strong> $${data.amount}</p>
                 `;
 
-                                // Reset form
-                                e.target.reset();
+                // Reset form
+                e.target.reset();
 
-                                // Refresh stats
-                                loadStats();
-                                loadPendingApprovals();
-                            } catch (error) {
-                                resultDiv.className = 'result error';
-                                resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
-                            }
-                        });
+                // Refresh stats
+                loadStats();
+                loadPendingApprovals();
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+            }
+        });
 
-                        // Initial load
-                        loadStats();
+        // Initial load
+        loadStats();
         loadPendingApprovals();
 
         // Refresh every 10 seconds
         setInterval(() => {
-                    loadStats();
-                    loadPendingApprovals();
-                }, 10000);
+            loadStats();
+            loadPendingApprovals();
+        }, 10000);
     </script>
 </body>
 
