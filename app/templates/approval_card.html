@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Approval {{ approval.approval_id }}</title></head>
+<body>
+  <h2>Approval request: {{ approval.approval_id }}</h2>
+  <p><b>Invoice:</b> {{ approval.invoice_id }}</p>
+  <p><b>Requester:</b> {{ approval.requester }}</p>
+  <p><b>Approver:</b> {{ approval.approver }}</p>
+  <p><b>Reason:</b> {{ approval.reason }}</p>
+  <p><b>Status:</b> {{ approval.status }}</p>
+  <form method="post" action="/approvals/{{ approval.approval_id }}/action" style="display:inline;">
+    <input type="hidden" name="action" value="approve">
+    <button type="submit">Approve</button>
+  </form>
+  <form method="post" action="/approvals/{{ approval.approval_id }}/action" style="display:inline;">
+    <input type="hidden" name="action" value="reject">
+    <button type="submit">Reject</button>
+  </form>
+</body>
+</html>

@@ -1,0 +1,60 @@
+openapi: "3.0.1"
+info:
+  title: Finsy.Approval
+  version: "1.0.0"
+servers:
+  - url: "http://localhost:5000"
+paths:
+  /approvals/create:
+    post:
+      summary: Create approval request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalRequest'
+      responses:
+        '200':
+          description: Approval created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalResponse'
+  /approvals/{approval_id}/action:
+    post:
+      summary: Take action on approval (approve/reject)
+      parameters:
+        - name: approval_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action: { type: string, enum: [approve, reject] }
+                comment: { type: string }
+      responses:
+        '200':
+          description: Action processed
+components:
+  schemas:
+    ApprovalRequest:
+      type: object
+      properties:
+        invoice_id: { type: string }
+        requester: { type: string }
+        approver: { type: string }
+        reason: { type: string }
+        context: { type: object }
+    ApprovalResponse:
+      type: object
+      properties:
+        approval_id: { type: string }
+        status: { type: string }
+        link: { type: string }

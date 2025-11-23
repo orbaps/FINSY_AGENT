@@ -1,0 +1,24 @@
+openapi: "3.0.1"
+info:
+  title: Finsy.Reporting
+  version: "1.0.0"
+servers:
+  - url: "http://localhost:5000"
+paths:
+  /reports/summary:
+    get:
+      summary: Get summary finance report (invoices / approvals / risk)
+      parameters:
+        - name: start_date
+          in: query
+          schema: { type: string }
+        - name: end_date
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Report JSON
+          content:
+            application/json:
+              schema:
+                type: object

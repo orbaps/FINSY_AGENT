@@ -1,0 +1,43 @@
+openapi: "3.0.1"
+info:
+  title: Finsy.Risk
+  version: "1.0.0"
+servers:
+  - url: "http://localhost:5000"
+paths:
+  /risk/score:
+    post:
+      summary: Get risk/fraud score for invoice JSON
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceForRisk'
+      responses:
+        '200':
+          description: RiskResult
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskResult'
+components:
+  schemas:
+    InvoiceForRisk:
+      type: object
+      properties:
+        invoice_id: { type: string }
+        vendor: { type: string }
+        total: { type: number }
+        po_number: { type: string }
+        date: { type: string }
+    RiskResult:
+      type: object
+      properties:
+        invoice_id: { type: string }
+        score: { type: number }
+        level: { type: string }
+        reasons:
+          type: array
+          items: { type: string }
+        suggest_action: { type: string }

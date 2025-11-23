@@ -1,0 +1,53 @@
+# Find this section in app/finsy_service.py and replace it:
+
+# OLD CODE (around line 60-70):
+risk_model = None
+try:
+    model_path = os.getenv("RISK_MODEL", "app/models/risk_model.pkl")
+    risk_model = joblib.load(model_path)
+    print(f"[MODEL] Loaded risk model from {model_path}")
+except Exception as e:
+    print(f"[MODEL] no model found or load failed: {e}")
+
+# REPLACE WITH:
+risk_model = None
+risk_scaler = None
+try:
+    model_path = os.getenv("RISK_MODEL", "app/models/risk_model.pkl")
+    loaded = joblib.load(model_path)
+    # The model file contains (model, scaler) tuple
+    if isinstance(loaded, tuple):
+        risk_model, risk_scaler = loaded
+    else:
+        risk_model = loaded
+    print(f"[MODEL] Loaded risk model from {model_path}")
+except Exception as e:
+    print(f"[MODEL] no model found or load failed: {e}")
+
+# AND UPDATE the compute_risk_with_model function (around line 70-77):
+
+# OLD CODE:
+def compute_risk_with_model(inv):
+    if not risk_model:
+        return None
+    feats = rule_based_features(inv)
+    X = [[feats['amount'], feats['has_po'], feats['vendor_suspicious']]]
+    score = float(risk_model.predict_proba(X)[0,1])
+    return score
+
+# REPLACE WITH:
+def compute_risk_with_model(inv):
+    if not risk_model:
+        return None
+    feats = rule_based_features(inv)
+    X = [[feats['amount'], feats['has_po'], feats['vendor_suspicious']]]
+    
+    # Apply scaler if available
+    if risk_scaler:
+        import pandas as pd
+        X_df = pd.DataFrame(X, columns=['amount', 'has_po', 'vendor_suspicious'])
+        X_df['amount'] = risk_scaler.transform(X_df[['amount']])
+        X = X_df.values
+    
+    score = float(risk_model.predict_proba(X)[0,1])
+    return score

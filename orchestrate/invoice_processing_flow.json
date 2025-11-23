@@ -1,0 +1,19 @@
+{
+  "name": "InvoiceProcessingFlow",
+  "description": "Ingest invoice -> parse -> validate -> risk score -> auto-approve or route to human approval -> post payment instruction -> reporting",
+  "steps": [
+    {"id":"ingest","type":"skill","skill":"Finsy.Invoice.parse","input":{"file": "{{trigger.file}}"},"output":"invoice"},
+    {"id":"validate","type":"script","script":"validation = validate_invoice(invoice); return validation","output":"validation"},
+    {"id":"risk","type":"skill","skill":"Finsy.Risk.score","input":{"invoice": "{{invoice}}"},"output":"risk"},
+    {"id":"decide","type":"switch","cases":[
+      {"condition":"risk.score < 0.3 && validation.ok == true","actions":[
+        {"type":"script","script":"auto_approve(invoice);"},
+        {"type":"skill","skill":"Finsy.Reporting","input":{"action":"log","invoice":"{{invoice}}"}}
+      ]},
+      {"condition":"else","actions":[
+        {"type":"skill","skill":"Finsy.Approval.create","input":{"invoice_id":"{{invoice.invoice_id}}","requester":"finance@company.com","approver":"procurement.manager@company.com","reason":"High risk or validation failed"}},
+        {"type":"wait_for_event","event":"approval_result","on_event":"continue"}
+      ]}
+    ]}
+  ]
+}

@@ -1,0 +1,49 @@
+openapi: "3.0.1"
+info:
+  title: Finsy.Invoice
+  version: "1.0.0"
+servers:
+  - url: "http://localhost:5000"
+paths:
+  /invoices/parse:
+    post:
+      summary: Upload invoice file for OCR parsing and normalization
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Parsed invoice JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+components:
+  schemas:
+    LineItem:
+      type: object
+      properties:
+        description: { type: string }
+        qty: { type: number }
+        price: { type: number }
+    Invoice:
+      type: object
+      properties:
+        invoice_id: { type: string }
+        vendor: { type: string }
+        date: { type: string, format: date }
+        total: { type: number }
+        currency: { type: string }
+        po_number: { type: string }
+        confidence: { type: number }
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineItem'

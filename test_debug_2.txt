@@ -1,0 +1,64 @@
+IBM Cloudant SDK not installed. Cloudant features will be disabled.
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-7.4.0, pluggy-1.6.0
+rootdir: C:\Users\orbap\Downloads\finsy-agent\finsy-agent
+configfile: pytest.ini
+plugins: anyio-4.10.0, asyncio-0.21.1
+asyncio: mode=Mode.STRICT
+collected 1 item
+
+tests\test_finsy_service.py DEBUG ERROR: 2 validation errors for ApprovalResponse
+amount
+  none is not an allowed value (type=type_error.none.not_allowed)
+vendor
+  none is not an allowed value (type=type_error.none.not_allowed)
+F
+
+================================== FAILURES ===================================
+___________________________ test_approval_workflow ____________________________
+
+client = <FlaskClient <Flask 'app.finsy_service'>>
+auth_headers = {'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJyb2xlcyI6WyJhZG1pbiIsImFwcHJvdmVyIl0sImV4cCI6MTc2Mzk3OTk5NywiaWF0IjoxNzYzODkzNTk3fQ.LsviE8z4ZLNFQAQIalIzcjBnZ0lMQrT5ncDixo-8ZGQ'}
+
+    def test_approval_workflow(client, auth_headers):
+        # 1. Create approval
+        payload = {
+            "invoice_id": "inv-456",
+            "amount": 2000.0,
+            "vendor": "Workflow Vendor",
+            "reason": "Test workflow"
+        }
+        create_resp = client.post('/approvals/create', json=payload, headers=auth_headers)
+        approval_id = json.loads(create_resp.data)['approval_id']
+    
+        # 2. Verify it's pending
+        pending_resp = client.get('/approvals/pending', headers=auth_headers)
+        pending_data = json.loads(pending_resp.data)
+        assert any(a['approval_id'] == approval_id for a in pending_data['pending_approvals'])
+    
+        # 3. Approve it
+        action_payload = {
+            "action": "approve",
+            "comment": "Looks good"
+        }
+        action_resp = client.post(f'/approvals/{approval_id}/action', json=action_payload, headers=auth_headers)
+>       assert action_resp.status_code == 200
+E       assert 500 == 200
+E        +  where 500 = <WrapperTestResponse streamed [500 INTERNAL SERVER ERROR]>.status_code
+
+tests\test_finsy_service.py:87: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    app.finsy_service:finsy_service.py:552 Failed to process approval action: 2 validation errors for ApprovalResponse
+amount
+  none is not an allowed value (type=type_error.none.not_allowed)
+vendor
+  none is not an allowed value (type=type_error.none.not_allowed)
+============================== warnings summary ===============================
+..\..\..\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\flask_limiter\extension.py:336
+  C:\Users\orbap\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\flask_limiter\extension.py:336: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_finsy_service.py::test_approval_workflow - assert 500 == 200
+======================== 1 failed, 1 warning in 0.22s =========================
